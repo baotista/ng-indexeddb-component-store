@@ -27,6 +27,8 @@ export class AppComponent implements OnInit {
     this.counterStore.state$.subscribe((state) => {
       console.log(state);
     });
+
+    this.counterStore.watchCount();
   }
 
   public increment() {
