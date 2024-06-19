@@ -10,10 +10,8 @@ const dbConfig: DBConfig = {
   objectStoresMeta: [
     {
       store: 'counter',
-      storeConfig: { keyPath: 'id', autoIncrement: false },
+      storeConfig: { keyPath: 'tabId', autoIncrement: false },
       storeSchema: [
-        { name: 'id', keypath: 'id', options: { unique: true } },
-        { name: 'tabId', keypath: 'tabId', options: { unique: true } },
         { name: 'count', keypath: 'count', options: { unique: false } },
       ],
     },

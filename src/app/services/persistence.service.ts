@@ -6,18 +6,8 @@ import { Observable, of } from 'rxjs';
   providedIn: 'root',
 })
 export class PersistenceService {
-  constructor(private readonly dbService: NgxIndexedDBService) {}
-
-  public generateTabIdIfNeeded(): void {
-    if (!this.getTabId()) {
-      this.generateTabId();
-      this.dbService
-        .update('counter', {
-          tabId: this.getTabId(),
-          count: 0,
-        })
-        .subscribe(console.log);
-    }
+  constructor(private readonly dbService: NgxIndexedDBService) {
+    this.initDbEntry();
   }
 
   public getCurrentCount(): Observable<{
@@ -26,7 +16,7 @@ export class PersistenceService {
   } | null> {
     const tabId = this.getTabId();
     if (tabId) {
-      return this.dbService.getByIndex('counter', 'tabId', tabId);
+      return this.dbService.getByKey('counter', tabId);
     }
     return of(null);
   }
@@ -45,10 +35,32 @@ export class PersistenceService {
     return sessionStorage.getItem('tabId');
   }
 
+  private generateTabIdIfNeeded(): void {
+    if (!this.getTabId()) {
+      this.generateTabId();
+    }
+  }
+
   private generateTabId(): void {
     const tabId =
       Math.random().toString(36).substring(2, 15) +
       Math.random().toString(36).substring(2, 15);
     sessionStorage.setItem('tabId', tabId);
+  }
+
+  private initDbEntry(): void {
+    this.generateTabIdIfNeeded();
+    this.getCurrentCount().subscribe((dbCount) => {
+      let newCount = 0;
+      if (dbCount) {
+        newCount = dbCount.count;
+      }
+      this.dbService
+        .update('counter', {
+          tabId: this.getTabId(),
+          count: newCount,
+        })
+        .subscribe(console.log);
+    });
   }
 }

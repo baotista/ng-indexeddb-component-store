@@ -24,7 +24,6 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.persistenceService.generateTabIdIfNeeded();
     this.counterStore.state$.subscribe((state) => {
       console.log(state);
     });
