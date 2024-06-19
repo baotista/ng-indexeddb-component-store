@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { NgxIndexedDBService } from 'ngx-indexed-db';
 import { Observable, of } from 'rxjs';
+import { APP_DATA_TTL } from '../config';
+import { DBCount } from '../model/db-count';
 
 @Injectable({
   providedIn: 'root',
@@ -10,10 +12,7 @@ export class PersistenceService {
     this.initDbEntry();
   }
 
-  public getCurrentCount(): Observable<{
-    tabId: string | null;
-    count: number;
-  } | null> {
+  public getCurrentCount(): Observable<DBCount | null> {
     const tabId = this.getTabId();
     if (tabId) {
       return this.dbService.getByKey('counter', tabId);
@@ -21,14 +20,16 @@ export class PersistenceService {
     return of(null);
   }
 
-  public saveCount(
-    value: number
-  ): Observable<{ tabId: string | null; count: number }> {
-    return this.dbService.update('counter', {
-      id: 1,
-      tabId: this.getTabId(),
-      count: value,
-    });
+  public saveCount(value: number): Observable<DBCount | null> {
+    const tabId = this.getTabId();
+    if (tabId) {
+      return this.dbService.update('counter', {
+        tabId: tabId,
+        count: value,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    return of(null);
   }
 
   public getTabId(): string | null {
@@ -52,15 +53,24 @@ export class PersistenceService {
     this.generateTabIdIfNeeded();
     this.getCurrentCount().subscribe((dbCount) => {
       let newCount = 0;
+      const updatedAt = new Date().toISOString();
       if (dbCount) {
-        newCount = dbCount.count;
+        newCount = this.dbCountIsStillValid(dbCount) ? dbCount.count : 0;
       }
       this.dbService
         .update('counter', {
           tabId: this.getTabId(),
           count: newCount,
+          updatedAt,
         })
         .subscribe(console.log);
     });
+  }
+
+  private dbCountIsStillValid(dbCount: DBCount): boolean {
+    const updatedAt = new Date(dbCount.updatedAt);
+    const now = new Date();
+    const diff = now.getTime() - updatedAt.getTime();
+    return diff < APP_DATA_TTL;
   }
 }
