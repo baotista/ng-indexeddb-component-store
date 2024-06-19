@@ -1,35 +1,22 @@
-import { AsyncPipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { NgxIndexedDBService } from 'ngx-indexed-db';
-import { Observable } from 'rxjs';
-import { PersistenceService } from './services/persistence.service';
-import { CounterStore } from './store/counter.store';
+import {AsyncPipe} from '@angular/common';
+import {Component} from '@angular/core';
+import {RouterOutlet} from '@angular/router';
+import {CounterStore} from './store/counter.store';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, AsyncPipe],
-  providers: [CounterStore, PersistenceService, NgxIndexedDBService],
+  providers: [CounterStore],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
-export class AppComponent implements OnInit {
-  public counter: Observable<number> = this.counterStore.select(
-    (state) => state.count
-  );
+export class AppComponent {
+  public counter = this.counterStore.count$;
+
   constructor(
-    private readonly counterStore: CounterStore,
-    private readonly persistenceService: PersistenceService
+    private readonly counterStore: CounterStore
   ) {}
-
-  ngOnInit() {
-    this.counterStore.state$.subscribe((state) => {
-      console.log(state);
-    });
-
-    this.counterStore.watchCount();
-  }
 
   public increment() {
     this.counterStore.increment();
